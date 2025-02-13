@@ -71,6 +71,7 @@ async function hashPasswordMiddleware(next) {
         next();
     }
 }
+
 operatorSchema.pre('findOneAndUpdate', hashPasswordMiddleware);
 operatorSchema.pre('updateOne', hashPasswordMiddleware);
 
