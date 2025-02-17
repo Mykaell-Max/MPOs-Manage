@@ -9,7 +9,7 @@ const osSchema = new mongoose.Schema({
 
     requester: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Operator',
+        ref: 'User',
         required: true
     },
 
