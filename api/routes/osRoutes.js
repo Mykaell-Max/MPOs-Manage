@@ -1,14 +1,17 @@
 const express = require("express");
 const router = express.Router();
 
-const osController = require("../controller/osController")
+const osController = require('../controller/osController');
 
-router
-    .route('/registerOs')
-    .post(osController.createOs);
+const {verifyJWT} = require('../../middlewares/jwtAuth');
 
+router.route('/registerOs')
+    .post(osController.createOs)   
+    .get(osController.getAllOs);      
 
-// need to know more about OS 
-
+router.route('/:id')
+    .get(osController.getOsById)      
+    .patch(osController.updateOs)     
+    .delete(osController.deleteOs);   
 
 module.exports = router;
