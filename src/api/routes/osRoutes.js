@@ -3,7 +3,7 @@ const router = express.Router();
 
 const osController = require('../controller/osController');
 
-const {verifyJWT} = require('../../middlewares/jwtAuth');
+const {verifyJWT} = require('../../../middlewares/jwtAuth');
 
 router.route('/registerOs')
     .post(osController.createOs)   

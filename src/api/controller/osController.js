@@ -1,4 +1,4 @@
-const Os = require('../../mongo/osModel');
+const Os = require('../mongo/osModel')
 
 
 async function createOs(req, res) {

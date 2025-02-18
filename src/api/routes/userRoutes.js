@@ -3,7 +3,7 @@ const router = express.Router();
 
 const userController = require('../controller/userController');
 
-const {verifyJWT} = require('../../middlewares/jwtAuth');
+const {verifyJWT} = require('../../../middlewares/jwtAuth');
 
 router
     .route('/registerUser')
@@ -15,7 +15,7 @@ router
 
 router
     .route('/:userId')
-    .patch(userAuth, userController.updateUser)
-    .delete(userAuth, userController.deleteUser);
+    .patch(userController.updateUser)
+    .delete(userController.deleteUser);
 
 module.exports = router;
