@@ -1,6 +1,6 @@
-const User = require('../../mongo/userModel');
+const User = require('../mongo/userModel');
 const jwt = require('jsonwebtoken');
-const {comparePasswords} = require('../../utils/hashPassword')
+const {comparePasswords} = require('../../../utils/hashPassword')
 
 
 async function createUser(req, res) {

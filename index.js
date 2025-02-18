@@ -1,2 +1,2 @@
 require('./config/setup');
-require('./api/api'); 
+require('./src/server')
