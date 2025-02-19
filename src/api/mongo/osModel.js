@@ -24,7 +24,7 @@ const osSchema = new mongoose.Schema({
         type: String, 
         enum: ["Baixa", "Média", "Alta", "Urgente"]
     },
-
+    
     items: [
         {
             material: {
@@ -63,9 +63,33 @@ const osSchema = new mongoose.Schema({
     status: {
         type: String,
         required: true,
-        enum: ["Aberta", "Em análise", "Concluída", "Cancelada"],
+        enum: ["Aberta", "Em análise", "Aprovada", "Rejeitada"],
         default: "Aberta"
     },
+
+    statusHistory: [
+        {
+            status: {
+                type: String,
+                enum: ["Aberta", "Em análise", "Aprovada", "Rejeitada"],
+                required: true
+            },
+            changedAt: {
+                type: Date,
+                default: Date.now
+            },
+            changedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            },
+            note: {
+                type: String,
+                trim: true,
+                required: false,
+                maxlength: [500, 'A nota deve ter menos de 500 caracteres'],
+            }
+        }
+    ],
 
     createdAt: {
         type: Date,
