@@ -11,12 +11,12 @@ router.route('/')
 router.route('/registerOs')
     .post(osController.createOs);   
 
-router.route('/:id')
+router.route('/:osId')
     .get(osController.getOsById)      
     .patch(osController.resubmitOs)     
     .delete(osController.deleteOs);
     
-router.route('/:id/status')
+router.route('/:osId/status')
     .patch(osController.changeStatus);
 
 module.exports = router;
