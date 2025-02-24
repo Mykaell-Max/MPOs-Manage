@@ -6,13 +6,13 @@ const osController = require('../controller/osController');
 const {verifyJWT} = require('../../../middlewares/jwtAuth');
 
 router.route('/')
-    .get(osController.getAllOs);
+    .get(osController.searchOs);
 
 router.route('/registerOs')
     .post(osController.createOs);   
 
 router.route('/:osId')
-    .get(osController.getOsById)      
+    // .get(osController.getOsById)      
     .patch(osController.resubmitOs)     
     .delete(osController.deleteOs);
     
