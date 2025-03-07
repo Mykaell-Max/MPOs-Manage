@@ -13,6 +13,8 @@ router
     .route('/login')
     .post(userController.loginUser);
 
+router.use(verifyJWT);
+
 router
     .route('/:userId')
     .patch(userController.updateUser)

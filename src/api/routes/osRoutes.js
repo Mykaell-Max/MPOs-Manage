@@ -5,14 +5,15 @@ const osController = require('../controller/osController');
 
 const {verifyJWT} = require('../../../middlewares/jwtAuth');
 
+router.use(verifyJWT);
+
 router.route('/')
     .get(osController.searchOs);
 
 router.route('/registerOs')
     .post(osController.createOs);   
 
-router.route('/:osId')
-    // .get(osController.getOsById)      
+router.route('/:osId')   
     .patch(osController.resubmitOs)     
     .delete(osController.deleteOs);
     

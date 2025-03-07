@@ -19,45 +19,6 @@ async function createOs(req, res) {
 }
 
 
-// async function getOsById(req, res) {
-//     try {
-//         const osId = req.params.osId;
-//         const os = await Os.findById(osId);
-
-//         if (!os) {
-//             return res.status(404).json({ message: "OS not found" });
-//         }
-
-//         return res.status(200).json(os);
-//     } catch (error) {
-//         return res.status(500).send(error.message);
-//     }
-// }
-
-
-// async function getAllOsFromUser(req, res) {
-//     try {
-//         const userId = req.params.userId;
-//         const osList = await Os.find({ requester: userId });
-  
-//         return res.status(200).json(osList);
-//     } catch (error) {
-//         return res.status(500).json({ error: error.message });
-//     }
-// }
-
-
-// async function getAllOs(req, res) {
-//     try {
-//         const osList = await Os.find();
-
-//         return res.status(200).json(osList);
-//     } catch (error) {
-//         return res.status(500).send(error.message);
-//     }
-// }
-
-
 async function deleteOs(req, res) {
     try {
         const osId = req.params.osId;
