@@ -17,7 +17,7 @@ MPOs Manage is a comprehensive product registration and management system design
 - **Request Creation**: Requesters can create new product registration or modification requests
 - **Approval Process**: Multi-step approval workflow with dedicated roles
   - Purchasing team reviews and approves/rejects requests
-  - Registration team processes approved requests in the ERP system (Protheus)
+  - Registration team processes approved requests in the ERP system 
 - **Status Tracking**: Comprehensive status history for each request
 - **Resubmission**: Ability to resubmit rejected requests with corrections
 
@@ -83,6 +83,6 @@ MPOs Manage is a comprehensive product registration and management system design
 2. **Em Análise (Compras)** - Under review by purchasing team
 3. **Aprovado por Compras** - Approved by purchasing team
 4. **Reprovado por Compras** - Rejected by purchasing team
-5. **Em Cadastro (Protheus)** - Being processed in the ERP system
+5. **Em Cadastro** - Being processed in the ERP system
 6. **Reprovado por Cadastro** - Rejected by registration team
 7. **Finalizado** - Process completed successfully

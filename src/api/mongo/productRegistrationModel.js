@@ -47,7 +47,7 @@ const productRegistrationSchema = new mongoose.Schema({
             "Em Análise (Compras)", 
             "Reprovado por Compras", 
             "Aprovado por Compras", 
-            "Em Cadastro (Protheus)", 
+            "Em Cadastro (Sistema ERP)", 
             "Reprovado por Cadastro",
             "Finalizado"
         ],
@@ -65,7 +65,7 @@ const productRegistrationSchema = new mongoose.Schema({
                     "Em Análise (Compras)", 
                     "Reprovado por Compras", 
                     "Aprovado por Compras", 
-                    "Em Cadastro (Protheus)", 
+                    "Em Cadastro (Sistema ERP)", 
                     "Reprovado por Cadastro",
                     "Finalizado"
                 ]

@@ -192,7 +192,7 @@ async function reviewByPurchasing(req, res) {
 async function getPendingRegistrations(req, res) {
     try {
         const baseQuery = ProductRegistration.find({
-            status: { $in: ["Aprovado por Compras", "Em Cadastro (Protheus)"] }
+            status: { $in: ["Aprovado por Compras", "Em Cadastro (Sistema ERP)"] }
         });
         
         const features = new ProductFeatures(baseQuery, req.query)
@@ -205,7 +205,7 @@ async function getPendingRegistrations(req, res) {
             .populate('requester', 'name email department');
         
         const totalDocuments = await ProductRegistration.countDocuments({
-            status: { $in: ["Aprovado por Compras", "Em Cadastro (Protheus)"] }
+            status: { $in: ["Aprovado por Compras", "Em Cadastro (Sistema ERP)"] }
         });
         
         const formattedRequests = requests.map(request => ({
@@ -261,7 +261,7 @@ async function processRegistration(req, res) {
         }
         
 
-        if (request.status !== "Aprovado por Compras" && request.status !== "Em Cadastro (Protheus)") {
+        if (request.status !== "Aprovado por Compras" && request.status !== "Em Cadastro (Sistema ERP)") {
             return res.status(400).json({ 
                 message: "Esta solicitação não está disponível para cadastro" 
             });
@@ -381,7 +381,7 @@ async function searchRequests(req, res) {
         } else if (req.user.role === 'Cadastro') {
             if (!req.query.status) {
                 baseQuery = ProductRegistration.find({
-                    status: { $in: ["Aprovado por Compras", "Em Cadastro (Protheus)", "Reprovado por Cadastro", "Finalizado"] }
+                    status: { $in: ["Aprovado por Compras", "Em Cadastro (Sistema ERP)", "Reprovado por Cadastro", "Finalizado"] }
                 });
             }
         }
