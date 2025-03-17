@@ -4,12 +4,12 @@ const cors = require('cors');
 const app = express();
 
 const userRoutes = require('./routes/userRoutes');
-const osRoutes = require('./routes/osRoutes');
+const productRoutes = require('./routes/productRegistrationRoutes');
 
 app.use(express.json());
 app.use(cors());
 
 app.use('/api/user', userRoutes);
-app.use('/api/os', osRoutes);
+app.use('/api/product', productRoutes)
 
 module.exports = app;
