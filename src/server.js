@@ -1,4 +1,4 @@
-const app = require('./api/api');
+const app = require('./app');
 const PORT = global.env.PORT;
 
 app.listen(PORT, () => {

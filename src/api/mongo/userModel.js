@@ -1,87 +1,181 @@
 const mongoose = require('mongoose');
-const { hashPassword } = require('../../../utils/hashPassword');
+const bcrypt = require('bcrypt');
 
-const userSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      maxlength: [12, 'O nome deve ter menos de 13 caracteres'],
-      minlength: [3, 'O nome deve ter mais de 2 caracteres'],
-      trim: true
-    },
-
-    lastName: {
-      type: String,
-      required: false,
-      trim: true
-    },
-    
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-      match: [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, 'E-mail inválido!']
-    },
-
-    password: {
-      type: String,
-      required: true,
-    },
-
-    phone: {
-      type: String,
-      required: false,
-      trim: true,
-      match: [/\(\d{2}\) \d{5}-\d{4}/, 'Número de telefone inválido!']
-    },
-
-    role: {
-      type: String,
-      required: true,
-      enum: ['Solicitante', 'Compras', 'Cadastro', 'Admin']
-    },
-
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    }
+const RoleSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  description: String,
+  permissions: [String],
+  isCustom: {
+    type: Boolean,
+    default: false
+  },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
-);
+}, { _id: false });
 
+const UserSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Please enter your name'],
+    trim: true
+  },
+  email: {
+    type: String,
+    required: [true, 'Please enter an email'],
+    unique: true,
+    trim: true,
+    lowercase: true,
+    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
+  },
+  password: {
+    type: String,
+    required: [true, 'Please enter a password'],
+    minlength: 6,
+    select: false
+  },
+  roles: [String],  
+  roleDetails: [RoleSchema],  
+  department: {
+    type: String,
+    trim: true
+  },
+  position: {
+    type: String,
+    trim: true
+  },
+  manager: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  lastLogin: Date,
+  profileImage: String,
 
-userSchema.pre('save', async function (next) {
-  if (this.isModified('password') || this.isNew) {
-    try {
-      this.password = await hashPassword(this.password);
-      next();
-    } catch (err) {
-      next(err);
+  substitutes: [{
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    startDate: Date,
+    endDate: Date,
+    reason: String,
+    active: {
+      type: Boolean,
+      default: true
+    },
+    workflows: [mongoose.Schema.Types.ObjectId]  
+  }],
+  preferences: {
+    notifications: {
+      email: {
+        type: Boolean,
+        default: true
+      },
+      inApp: {
+        type: Boolean,
+        default: true
+      }
+    },
+    language: {
+      type: String,
+      default: 'en'
+    },
+    theme: {
+      type: String,
+      default: 'light'
     }
-  } else {
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: Date
+});
+
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
     next();
+  } catch (error) {
+    next(error);
   }
 });
 
+UserSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
 
-async function hashPasswordMiddleware(next) {
-  const update = this.getUpdate();
-  if (update.password) {
-    try {
-      update.password = await hashPassword(update.password);
-      this.setUpdate(update);
-      next();
-    } catch (err) {
-      next(err);
-    }
-  } else {
-    next();
-  }
-}
+UserSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
-userSchema.pre('findOneAndUpdate', hashPasswordMiddleware);
-userSchema.pre('updateOne', hashPasswordMiddleware);
+UserSchema.methods.hasRole = function(roleName) {
+  return this.roles.includes(roleName);
+};
 
-const User = mongoose.model('User', userSchema);
-module.exports = User;
+UserSchema.methods.hasPermission = function(permission) {
+  if (this.roles.includes('Admin')) return true;
+  return this.roleDetails.some(role => 
+    role.permissions && role.permissions.includes(permission)
+  );
+};
+
+UserSchema.methods.canSubstituteFor = function(userId, workflowId = null) {
+  if (!this.isActive) return false;
+  
+  const now = new Date();
+  
+  return this.substitutes.some(sub => 
+    sub.user.toString() === userId.toString() &&
+    sub.active &&
+    (!sub.startDate || sub.startDate <= now) &&
+    (!sub.endDate || sub.endDate >= now) &&
+    (!workflowId || !sub.workflows.length || sub.workflows.some(wf => wf.toString() === workflowId.toString()))
+  );
+};
+
+UserSchema.methods.getActiveSubstitutes = function() {
+  const now = new Date();
+  
+  return this.substitutes.filter(sub => 
+    sub.active &&
+    (!sub.startDate || sub.startDate <= now) &&
+    (!sub.endDate || sub.endDate >= now)
+  ).map(sub => sub.user);
+};
+
+UserSchema.virtual('fullName').get(function() {
+  return `${this.name}`;
+});
+
+UserSchema.index({ email: 1 });
+UserSchema.index({ roles: 1 });
+UserSchema.index({ department: 1 });
+UserSchema.index({ 'substitutes.user': 1, 'substitutes.active': 1 });
+
+UserSchema.set('toJSON', { virtuals: true });
+UserSchema.set('toObject', { virtuals: true });
+
+const RoleModel = mongoose.model('Role', new mongoose.Schema(RoleSchema.obj));
+
+module.exports = {
+  User: mongoose.model('User', UserSchema),
+  Role: RoleModel
+};
