@@ -1,23 +1,31 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-
 const userController = require('../controller/userController');
+const authMiddleware = require('../middleware/authMiddleware');
 
-const {verifyJWT} = require('../../../middlewares/jwtAuth');
+// Public routes
+router.post('/register', userController.createUser);
+router.post('/login', userController.loginUser);
 
-router
-    .route('/registerUser')
-    .post(userController.createUser);
+// Protected routes
+router.use(authMiddleware.authenticate);
 
-router
-    .route('/login')
-    .post(userController.loginUser);
+// Get current user profile
+router.get('/profile', userController.getUserProfile);
 
-router.use(verifyJWT);
+// Update user preferences
+router.put('/preferences', userController.updateUserPreferences);
 
-router
-    .route('/:userId')
-    .patch(userController.updateUser)
-    .delete(userController.deleteUser);
+// Admin-only routes
+router.use(authMiddleware.authorize(['Admin']));
+
+// Update user
+router.put('/:userId', userController.updateUser);
+
+// Delete/deactivate user
+router.delete('/:userId', userController.deleteUser);
+
+// Set user substitute
+router.post('/:userId/substitute', userController.setUserSubstitute);
 
 module.exports = router;
