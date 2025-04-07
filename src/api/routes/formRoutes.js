@@ -12,8 +12,6 @@ router.post('/', authMiddleware.authorize(['Admin', 'FormDesigner']), formContro
 // Get all forms
 router.get('/', formController.getAllFormDefinitions);
 
-// Validate form data
-router.post('/validate', formController.validateFormData);
 
 // ====== SPECIFIC ROUTES FIRST ======
 // Get form by name
@@ -31,6 +29,9 @@ router.put('/:id', authMiddleware.authorize(['Admin', 'FormDesigner']), formCont
 
 // Toggle form active status
 router.patch('/:id/status', authMiddleware.authorize(['Admin', 'FormDesigner']), formController.toggleFormStatus);
+
+// Validate form data
+router.post('/:id/validate', formController.validateFormData);
 
 // Clone a form
 router.post('/:id/clone', authMiddleware.authorize(['Admin', 'FormDesigner']), formController.cloneFormDefinition);
