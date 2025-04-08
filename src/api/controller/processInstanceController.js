@@ -1,14 +1,13 @@
 const ProcessInstance = require('../mongo/processInstanceModel');
 const Workflow = require('../mongo/workflowModel');
-const User = require('../mongo/userModel');
+const { User } = require('../mongo/userModel');
 const executionService = require('../services/processExecutionService');
 const mongoose = require('mongoose');
 
 
 exports.startProcess = async (req, res) => {
   try {
-    const workflowId = req.params.workflowId;
-    const { title, description, data } = req.body;
+    const { workflowId, title, description, data } = req.body;
     
     if (!title) {
       return res.status(400).json({
@@ -57,7 +56,7 @@ exports.startProcess = async (req, res) => {
     let assignedTo = [];
     if (initialState.assignedRoles && initialState.assignedRoles.length > 0) {
       const users = await User.find({
-        role: { $in: initialState.assignedRoles }
+        roles: { $in: initialState.assignedRoles }
       }).select('_id');
       
       assignedTo = users.map(user => user._id);
@@ -66,6 +65,7 @@ exports.startProcess = async (req, res) => {
     const processInstance = new ProcessInstance({
       workflow: workflowId,
       workflowVersion: workflow.version,
+      workflowName: workflow.name,
       title,
       description,
       currentState: initialState.name,
@@ -78,7 +78,7 @@ exports.startProcess = async (req, res) => {
         executedAt: new Date(),
         comments: 'Process started'
       }],
-      initiatedBy: req.user._id,
+      startedBy: req.user._id,
       assignedTo,
       status: 'active'
     });
@@ -102,11 +102,11 @@ exports.startProcess = async (req, res) => {
 
 exports.executeAction = async (req, res) => {
   try {
-    const { processId, action } = req.params;
+    const { id, action } = req.params;
     const { data, comments } = req.body;
     
     const updatedProcess = await executionService.executeAction(
-      processId, 
+      id, 
       action, 
       req.user, 
       data, 
@@ -136,7 +136,7 @@ exports.executeAction = async (req, res) => {
 exports.getProcesses = async (req, res) => {
   try {
     const { 
-      status, state, workflow, assignedToMe, initiatedByMe, 
+      status, state, workflow, assignedToMe, startedByMe, 
       sortBy, order, page, limit 
     } = req.query;
     
@@ -146,15 +146,15 @@ exports.getProcesses = async (req, res) => {
     if (state) query.currentState = state;
     if (workflow) query.workflow = workflow;
     
-    if (req.user.role !== 'Admin') {
+    if (!req.user.roles.includes('Admin')) {
       if (assignedToMe === 'true') {
         query.assignedTo = req.user._id;
-      } else if (initiatedByMe === 'true') {
-        query.initiatedBy = req.user._id;
+      } else if (startedByMe === 'true') {
+        query.startedBy = req.user._id;
       } else {
         query.$or = [
           { assignedTo: req.user._id },
-          { initiatedBy: req.user._id }
+          { startedBy: req.user._id }
         ];
       }
     }
@@ -175,7 +175,7 @@ exports.getProcesses = async (req, res) => {
       .skip(skip)
       .limit(pageSize)
       .populate('workflow', 'name')
-      .populate('initiatedBy', 'name email')
+      .populate('startedBy', 'name email')
       .populate('assignedTo', 'name email')
       .lean();
     
@@ -212,7 +212,7 @@ exports.getProcessById = async (req, res) => {
     
     const process = await ProcessInstance.findById(processId)
       .populate('workflow')
-      .populate('initiatedBy', 'name email role')
+      .populate('startedBy', 'name email role')
       .populate('assignedTo', 'name email role')
       .populate({
         path: 'history.executedBy',
@@ -232,7 +232,7 @@ exports.getProcessById = async (req, res) => {
     
     if (req.user.role !== 'Admin' && 
         !process.assignedTo.some(user => user._id.equals(req.user._id)) &&
-        !process.initiatedBy._id.equals(req.user._id)) {
+        !process.startedBy._id.equals(req.user._id)) {
       return res.status(403).json({
         success: false,
         message: 'You do not have permission to view this process'
@@ -292,8 +292,7 @@ exports.getAvailableActions = async (req, res) => {
     }
     
     const availableActions = currentState.actions.filter(action => 
-      action.allowedRoles.includes(req.user.role) || 
-      (req.user.role === 'Admin' && action.allowedRoles.includes('Admin'))
+      req.user.roles.some(role => action.allowedRoles.includes(role))
     ).map(action => ({
       name: action.name,
       label: action.label,
@@ -325,7 +324,7 @@ exports.getAvailableActions = async (req, res) => {
 
 exports.addComment = async (req, res) => {
   try {
-    const processId = req.params.id;
+    const id = req.params.id;
     const { text, attachments } = req.body;
     
     if (!text) {
@@ -335,7 +334,7 @@ exports.addComment = async (req, res) => {
       });
     }
     
-    const process = await ProcessInstance.findById(processId);
+    const process = await ProcessInstance.findById(id);
     if (!process) {
       return res.status(404).json({
         success: false,
@@ -344,9 +343,9 @@ exports.addComment = async (req, res) => {
     }
     
     const canComment = 
-      process.assignedTo.includes(req.user._id) || 
-      process.initiatedBy.equals(req.user._id) ||
-      req.user.role === 'Admin';
+      process.assignedTo.some(userId => userId.equals(req.user._id)) || 
+      process.startedBy.equals(req.user._id) ||
+      req.user.roles.includes('Admin');
     
     if (!canComment) {
       return res.status(403).json({
@@ -365,7 +364,7 @@ exports.addComment = async (req, res) => {
     process.comments.push(newComment);
     await process.save();
     
-    const updatedProcess = await ProcessInstance.findById(processId)
+    const updatedProcess = await ProcessInstance.findById(id)
       .populate({
         path: 'comments.createdBy',
         select: 'name email'
@@ -445,7 +444,7 @@ exports.getMyTasks = async (req, res) => {
       .skip(skip)
       .limit(pageSize)
       .populate('workflow', 'name')
-      .populate('initiatedBy', 'name')
+      .populate('startedBy', 'name')
       .select('title description currentState workflowVersion createdAt updatedAt dueDate priority');
     
     const total = await ProcessInstance.countDocuments(query);
@@ -470,7 +469,7 @@ exports.getMyTasks = async (req, res) => {
 
 exports.reassignProcess = async (req, res) => {
   try {
-    const { processId } = req.params;
+    const { id } = req.params;
     const { userIds } = req.body;
     
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
@@ -499,7 +498,7 @@ exports.reassignProcess = async (req, res) => {
       });
     }
     
-    const process = await ProcessInstance.findById(processId);
+    const process = await ProcessInstance.findById(id);
     if (!process) {
       return res.status(404).json({
         success: false,
@@ -507,7 +506,7 @@ exports.reassignProcess = async (req, res) => {
       });
     }
     
-    const isAdmin = req.user.role === 'Admin';
+    const isAdmin = req.user.roles.includes('Admin');
     const isAssignee = process.assignedTo.some(id => id.equals(req.user._id));
     
     if (!isAdmin && !isAssignee) {
@@ -531,7 +530,7 @@ exports.reassignProcess = async (req, res) => {
     
     await process.save();
     
-    const updatedProcess = await ProcessInstance.findById(processId)
+    const updatedProcess = await ProcessInstance.findById(id)
       .populate('assignedTo', 'name email role');
     
     res.status(200).json({
@@ -556,7 +555,7 @@ exports.getProcessStats = async (req, res) => {
       if (req.user.role !== 'Admin') {
         query.$or = [
           { assignedTo: req.user._id },
-          { initiatedBy: req.user._id }
+          { startedBy: req.user._id }
         ];
       }
       
@@ -668,12 +667,12 @@ exports.getProcessStats = async (req, res) => {
         }},
         { $lookup: {
           from: 'users',
-          localField: 'initiatedBy',
+          localField: 'startedBy',
           foreignField: '_id',
           as: 'initiatorInfo'
         }},
         { $group: {
-          _id: "$initiatedBy",
+          _id: "$startedBy",
           userName: { $first: { $arrayElemAt: ["$initiatorInfo.name", 0] } },
           totalProcesses: { $sum: 1 },
           averageCompletionTime: { 
@@ -724,9 +723,9 @@ exports.getProcessStats = async (req, res) => {
 
 exports.getProcessTimeline = async (req, res) => {
 try {
-    const { processId } = req.params;
+    const { id } = req.params;
     
-    const process = await ProcessInstance.findById(processId)
+    const process = await ProcessInstance.findById(id)
     .populate({
         path: 'history.executedBy',
         select: 'name'
@@ -786,12 +785,12 @@ try {
 
 exports.exportProcess = async (req, res) => {
 try {
-    const { processId } = req.params;
+    const { id } = req.params;
     const { format } = req.query; 
     
-    const process = await ProcessInstance.findById(processId)
+    const process = await ProcessInstance.findById(id)
     .populate('workflow', 'name')
-    .populate('initiatedBy', 'name email')
+    .populate('startedBy', 'name email')
     .populate('assignedTo', 'name email')
     .populate({
         path: 'history.executedBy',
@@ -805,9 +804,9 @@ try {
     });
     }
     
-    if (req.user.role !== 'Admin' && 
+    if (!req.user.roles.includes('Admin') && 
         !process.assignedTo.some(user => user._id.equals(req.user._id)) &&
-        !process.initiatedBy._id.equals(req.user._id)) {
+        !process.startedBy._id.equals(req.user._id)) {
     return res.status(403).json({
         success: false,
         message: 'You do not have permission to export this process'
@@ -821,7 +820,7 @@ try {
     workflow: process.workflow.name,
     workflowVersion: process.workflowVersion,
     currentState: process.currentState,
-    initiatedBy: process.initiatedBy.name,
+    startedBy: process.startedBy.name,
     initiatedAt: process.createdAt,
     status: process.status,
     data: process.data,
@@ -888,7 +887,7 @@ try {
     
     switch(action) {
     case 'cancel':
-        if (req.user.role !== 'Admin') {
+        if (!req.user.roles.includes('Admin')) {
         return res.status(403).json({
             success: false,
             message: 'Only admins can perform bulk cancellation'
@@ -949,7 +948,7 @@ try {
         });
         }
         
-        if (req.user.role !== 'Admin') {
+        if (!req.user.roles.includes('Admin')) {
         return res.status(403).json({
             success: false,
             message: 'Only admins can perform bulk reassignment'
@@ -1005,7 +1004,7 @@ try {
 
 exports.setPriority = async (req, res) => {
 try {
-    const { processId } = req.params;
+    const { id } = req.params;
     const { priority } = req.body;
     
     if (!['low', 'medium', 'high', 'urgent'].includes(priority)) {
@@ -1015,7 +1014,7 @@ try {
     });
     }
     
-    const process = await ProcessInstance.findById(processId);
+    const process = await ProcessInstance.findById(id);
     if (!process) {
     return res.status(404).json({
         success: false,
@@ -1023,7 +1022,7 @@ try {
     });
     }
     
-    if (req.user.role !== 'Admin' && !process.initiatedBy.equals(req.user._id)) {
+    if (!req.user.roles.includes('Admin') && !process.startedBy.equals(req.user._id)) {
     return res.status(403).json({
         success: false,
         message: 'You do not have permission to change process priority'
@@ -1064,7 +1063,7 @@ try {
 
 exports.setDueDate = async (req, res) => {
 try {
-    const { processId } = req.params;
+    const { id } = req.params;
     const { dueDate } = req.body;
     
     if (!dueDate) {
@@ -1082,7 +1081,7 @@ try {
     });
     }
     
-    const process = await ProcessInstance.findById(processId);
+    const process = await ProcessInstance.findById(id);
     if (!process) {
     return res.status(404).json({
         success: false,
@@ -1090,7 +1089,7 @@ try {
     });
     }
     
-    if (req.user.role !== 'Admin' && !process.initiatedBy.equals(req.user._id)) {
+    if (!req.user.roles.includes('Admin') && !process.startedBy.equals(req.user._id)) {
     return res.status(403).json({
         success: false,
         message: 'You do not have permission to change process due date'

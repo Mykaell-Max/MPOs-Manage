@@ -537,7 +537,7 @@ exports.associateWithWorkflow = async (req, res) => {
 
 exports.removeWorkflowAssociation = async (req, res) => {
   try {
-    const { formId, workflowId } = req.params;
+    const { id: formId, workflowId } = req.params;
     
     if (!mongoose.Types.ObjectId.isValid(formId) || !mongoose.Types.ObjectId.isValid(workflowId)) {
       return res.status(400).json({
