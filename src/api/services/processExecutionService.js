@@ -4,8 +4,11 @@ const mongoose = require('mongoose');
 
 class ProcessExecutionService {
   async executeAction(processId, actionName, user, data = {}, comments = '') {
-    const process = await this.validateProcessAndAction(processId, actionName, user);
-    const currentState = process.states.find(state => state.name === process.currentState);
+    // Get both process and workflow from validation method
+    const { process, workflow } = await this.validateProcessAndAction(processId, actionName, user);
+    
+    // Use workflow.states instead of process.states
+    const currentState = workflow.states.find(state => state.name === process.currentState);
     const actionToExecute = currentState.actions.find(action => action.name === actionName);
     
     if (actionToExecute.requiredFields && actionToExecute.requiredFields.length > 0) {
@@ -28,7 +31,6 @@ class ProcessExecutionService {
     process.currentState = targetState;
     process.history.push(historyEntry);
     
-    const workflow = await Workflow.findById(process.workflow);
     const targetStateDefinition = workflow.states.find(state => state.name === targetState);
     
     if (targetStateDefinition.isFinal) {
@@ -69,7 +71,7 @@ class ProcessExecutionService {
       throw new Error('You do not have permission to execute this action');
     }
     
-    return process;
+    return { process, workflow };
   }
   
   checkUserPermission(user, allowedRoles) {

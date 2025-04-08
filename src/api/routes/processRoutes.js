@@ -11,7 +11,7 @@ router.use(authMiddleware.authenticate);
 router.post('/start', processController.startProcess);
 
 // Get processes with filtering
-router.get('/', processController.getProcesses);
+router.get('/search', processController.getProcesses);
 
 // Get tasks assigned to current user
 router.get('/tasks/my', processController.getMyTasks);
@@ -20,7 +20,7 @@ router.get('/tasks/my', processController.getMyTasks);
 router.get('/stats', processController.getProcessStats);
 
 // Bulk actions on processes
-router.post('/bulk', authMiddleware.authorize(['Admin', 'ProcessManager']), processController.bulkAction);
+router.post('/bulk/:action', authMiddleware.authorize(['Admin', 'ProcessManager']), processController.bulkAction);
 
 // ====== GENERIC ID ROUTES AFTER SPECIFIC ROUTES ======
 // Get process by ID
