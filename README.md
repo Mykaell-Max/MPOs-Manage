@@ -147,6 +147,15 @@ This project uses a modular architecture with:
 - Middleware for request processing
 - Utils for helper functions
 
+## Team
+
+This project is a collaboration between:
+
+- **Mykaell Max** - Lead Developer
+- **Pedro Fernandes** - Business Process Specialist
+
+*Pedro Fernandes provided critical domain expertise, workflow design guidance, and business requirements that shaped the core functionality of this BPM system.*
+
 ## License
 
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue.svg)](LICENSE.md)
@@ -154,7 +163,7 @@ This project uses a modular architecture with:
 This project is licensed under the [Business Source License 1.1](LICENSE.md).
 
 **Key Terms:**
-- Licensor: Mykaell Max
+- Licensors: Mykaell Max and Pedro Fernandes
 - Licensed Work: MPOs_Manage 1.0
 - Additional Use Grant: None
 - Change Date: None

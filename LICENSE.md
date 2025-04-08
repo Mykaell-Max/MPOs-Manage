@@ -2,7 +2,7 @@
 
 ## Parameters
 
-- **Licensor**: Mykaell Max
+- **Licensors**: Mykaell Max and Pedro Fernandes
 - **Licensed Work**: MPOs_Manage 1.0
 - **Additional Use Grant**: None
 - **Change Date**: None
