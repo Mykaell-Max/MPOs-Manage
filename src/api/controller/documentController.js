@@ -694,14 +694,18 @@ exports.getDocumentVersions = async (req, res) => {
       });
     }
     
-    if (!document.hasPermission(req.user._id, 'read')) {
+    const isAdmin = req.user.roles && req.user.roles.includes('Admin');
+    
+    if (!isAdmin && !document.hasPermission(req.user._id, 'read')) {
       return res.status(403).json({
         success: false,
         message: 'You do not have permission to view this document'
       });
     }
+
+    const versionsArray = Array.isArray(document.versions) ? document.versions : [];
     
-    const versions = document.versions.map(version => ({
+    const versions = versionsArray.map(version => ({
       versionNumber: version.versionNumber,
       fileName: version.fileName,
       fileSize: version.fileSize,
@@ -709,7 +713,7 @@ exports.getDocumentVersions = async (req, res) => {
       downloadUrl: version.fileUrl,
       createdBy: version.createdBy,
       createdAt: version.createdAt,
-      comments: version.comments,
+      comments: version.comments || '',
       isCurrent: version.versionNumber === document.currentVersion
     })).sort((a, b) => b.versionNumber - a.versionNumber);
     
@@ -909,36 +913,56 @@ exports.searchDocuments = async (req, res) => {
   try {
     const { search, category, status, type, folder, sortBy, sortOrder, page, limit } = req.query;
     
-    const options = {
-      category,
-      status: status || 'active',
-      type,
-      folder,
-      search,
-      sort: sortBy ? `${sortOrder === 'desc' ? '-' : ''}${sortBy}` : '-createdAt',
-      page: parseInt(page) || 1,
-      limit: parseInt(limit) || 10
-    };
+    let query = Document.find({
+      $or: [
+        { owner: req.user._id },
+        { 'accessPermissions': { 
+          $elemMatch: { 
+            entity: 'user', 
+            entityId: req.user._id.toString(), 
+            permission: { $in: ['read', 'write', 'delete', 'admin'] }
+          }
+        }},
+        { isPublic: true }
+      ]
+    });
     
-    const documents = await Document.findByUserAccess(req.user._id, 'read', options)
+    if (category) query = query.where('category', category);
+    if (status) query = query.where('status', status || 'active');
+    if (type) query = query.where('type', type);
+    if (folder) query = query.where('folder', folder);
+    if (search) {
+      query = query.find({
+        $text: { $search: search }
+      });
+    }
+    
+    const sortOptions = {};
+    if (sortBy) {
+      sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    } else {
+      sortOptions.createdAt = -1;
+    }
+    
+    const pageNum = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 10;
+    const skip = (pageNum - 1) * pageSize;
+    
+    const documents = await query
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(pageSize)
       .populate('owner', 'name email')
       .populate('folder', 'name path');
     
-    const totalQuery = { ...options };
-    delete totalQuery.sort;
-    delete totalQuery.page;
-    delete totalQuery.limit;
-    
-    const total = await Document.countDocuments(
-      await Document.findByUserAccess(req.user._id, 'read', totalQuery).getFilter()
-    );
+    const total = await Document.countDocuments(query.getFilter());
     
     res.status(200).json({
       success: true,
       count: documents.length,
       total,
-      pages: Math.ceil(total / options.limit),
-      currentPage: options.page,
+      pages: Math.ceil(total / pageSize),
+      currentPage: pageNum,
       data: documents.map(doc => ({
         _id: doc._id,
         title: doc.title,

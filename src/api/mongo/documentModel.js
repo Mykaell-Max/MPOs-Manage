@@ -267,17 +267,22 @@ DocumentSchema.methods.addVersion = function(versionData) {
 };
 
 DocumentSchema.methods.hasPermission = function(userId, requiredPermission) {
-  if (this.owner.toString() === userId.toString()) {
+  if (!userId) return false;
+  
+  if (this.owner && this.owner.toString() === userId.toString()) {
     return true;
   }
-  const userPermission = this.accessPermissions.find(p => 
-    p.entity === 'user' && p.entityId === userId.toString()
-  );
-  
-  if (userPermission) {
-    if (userPermission.permission === 'admin') return true;
-    if (userPermission.permission === 'write' && requiredPermission === 'read') return true;
-    if (userPermission.permission === requiredPermission) return true;
+
+  if (this.accessPermissions) {
+    const userPermission = this.accessPermissions.find(p => 
+      p.entity === 'user' && p.entityId === userId.toString()
+    );
+    
+    if (userPermission) {
+      if (userPermission.permission === 'admin') return true;
+      if (userPermission.permission === 'write' && requiredPermission === 'read') return true;
+      if (userPermission.permission === requiredPermission) return true;
+    }
   }
   
   // TODO: check role-based permissions (would need users roles...)
