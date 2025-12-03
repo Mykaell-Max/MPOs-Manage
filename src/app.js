@@ -8,15 +8,21 @@ const apiRoutes = require('./api/routes');
 const app = express();
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:3000', credentials: true}));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+app.get('/ping', (req, res) => {
+  res.status(200).json({ message: 'pong' });
+});
+
 app.use('/api', apiRoutes);
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
+
   console.error(err.stack);
   res.status(statusCode).json({
     success: false,
