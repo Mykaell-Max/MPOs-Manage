@@ -32,6 +32,12 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Rota da documentação Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Endpoint para visualizar o Swagger JSON
+app.get('/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 app.get('/ping', (req, res) => {
   res.status(200).json({ message: 'pong' });
 });
