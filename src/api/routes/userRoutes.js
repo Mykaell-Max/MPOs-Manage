@@ -4,653 +4,71 @@ const userController = require('../controller/userController');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // Public routes
+router.post('/register', (req, res, next) => {
+  /* 
+    #swagger.tags = ['Autenticação']
+    #swagger.description = 'Registra um novo usuário (apenas admin)'
+  */
+  return userController.createUser(req, res, next);
+});
 
-/**
- * @swagger
- * /api/users/register:
- *   post:
- *     summary: Registra um novo usuário (apenas admin)
- *     tags:
- *       - Autenticação
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *               roles:
- *                 type: array
- *                 items:
- *                   type: string
- *               department:
- *                 type: string
- *               position:
- *                 type: string
- *               preferences:
- *                 type: object
- *     responses:
- *       201:
- *         description: Usuário criado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     roles:
- *                       type: array
- *                       items:
- *                         type: string
- *                     department:
- *                       type: string
- *                     position:
- *                       type: string
- *       409:
- *         description: Usuário já existe
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *             example:
- *               success: false
- *               message: "User with this email already exists"
- *       500:
- *         description: Erro interno ao criar usuário
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 error:
- *                   type: string
- *             example:
- *               success: false
- *               message: "Failed to create user"
- *               error: "Erro detalhado"
- */
-router.post('/register', userController.createUser);
- 
-/**
- * @swagger
- * /api/users/login:
- *   post:
- *     summary: Realiza login do usuário
- *     tags:
- *       - Autenticação
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login realizado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 token:
- *                   type: string
- *                 user:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     roles:
- *                       type: array
- *                       items:
- *                         type: string
- *                     department:
- *                       type: string
- *                     position:
- *                       type: string
- *                     preferences:
- *                       type: object
- *       403:
- *         description: Email ou senha inválidos, ou conta desativada
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *             example:
- *               success: false
- *               message: "Invalid email or password"
- *       500:
- *         description: Erro interno ao realizar login
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 error:
- *                   type: string
- *             example:
- *               success: false
- *               message: "Failed to login"
- *               error: "Erro detalhado"
- */
-router.post('/login', userController.loginUser);
+router.post('/login', (req, res, next) => {
+  /* 
+    #swagger.tags = ['Autenticação']
+    #swagger.description = 'Realiza login do usuário'
+  */
+  return userController.loginUser(req, res, next);
+});
 
 // Protected routes - require authentication
 router.use(authMiddleware.authenticate);
 
 // Get current user profile
-/**
- * @swagger
- * /api/users/profile:
- *   get:
- *     summary: Retorna o perfil do usuário autenticado
- *     tags:
- *       - Usuário
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Perfil do usuário retornado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     roles:
- *                       type: array
- *                       items:
- *                         type: string
- *                     department:
- *                       type: string
- *                     position:
- *                       type: string
- *                     isActive:
- *                       type: boolean
- *                     lastLogin:
- *                       type: string
- *                     profileImage:
- *                       type: string
- *                     preferences:
- *                       type: object
- *       404:
- *         description: Usuário não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *             example:
- *               success: false
- *               message: "User not found"
- *       500:
- *         description: Erro interno ao buscar perfil
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 error:
- *                   type: string
- *             example:
- *               success: false
- *               message: "Failed to fetch user profile"
- *               error: "Erro detalhado"
- */
-router.get('/profile', userController.getUserProfile);
+router.get('/profile', (req, res, next) => {
+  /* 
+    #swagger.tags = ['Usuário']
+    #swagger.description = 'Retorna o perfil do usuário autenticado'
+  */
+  return userController.getUserProfile(req, res, next);
+});
 
 // Update user preferences
-/**
- * @swagger
- * /api/users/preferences:
- *   put:
- *     summary: Atualiza as preferências do usuário autenticado
- *     tags:
- *       - Usuário
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               preferences:
- *                 type: object
- *     responses:
- *       200:
- *         description: Preferências atualizadas com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *       400:
- *         description: Preferências não enviadas
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *             example:
- *               success: false
- *               message: "Preferences object is required"
- *       404:
- *         description: Usuário não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *             example:
- *               success: false
- *               message: "User not found"
- *       500:
- *         description: Erro interno ao atualizar preferências
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 error:
- *                   type: string
- *             example:
- *               success: false
- *               message: "Failed to update preferences"
- *               error: "Erro detalhado"
- */
-router.put('/preferences', userController.updateUserPreferences);
+router.put('/preferences', (req, res, next) => {
+  /* 
+    #swagger.tags = ['Usuário']
+    #swagger.description = 'Atualiza as preferências do usuário autenticado'
+  */
+  return userController.updateUserPreferences(req, res, next);
+});
 
 // Admin-only routes
 router.use(authMiddleware.authorize(['Admin']));
 
 // Update user
-/**
- * @swagger
- * /api/users/{userId}:
- *   put:
- *     summary: Atualiza dados de um usuário (admin)
- *     tags:
- *       - Usuário
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID do usuário a ser atualizado
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               department:
- *                 type: string
- *               position:
- *                 type: string
- *               isActive:
- *                 type: boolean
- *               lastLogin:
- *                 type: string
- *               profileImage:
- *                 type: string
- *               preferences:
- *                 type: object
- *     responses:
- *       200:
- *         description: Usuário atualizado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     _id:
- *                       type: string
- *                     name:
- *                       type: string
- *                     email:
- *                       type: string
- *                     roles:
- *                       type: array
- *                       items:
- *                         type: string
- *                     department:
- *                       type: string
- *                     position:
- *                       type: string
- *                     isActive:
- *                       type: boolean
- *                     lastLogin:
- *                       type: string
- *                     profileImage:
- *                       type: string
- *                     preferences:
- *                       type: object
- *       400:
- *         description: Atualização de roles não permitida
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *             example:
- *               success: false
- *               message: "Role updates must be done through the role assignment endpoints"
- *       404:
- *         description: Usuário não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *             example:
- *               success: false
- *               message: "User not found"
- *       500:
- *         description: Erro interno ao atualizar usuário
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 error:
- *                   type: string
- *             example:
- *               success: false
- *               message: "Failed to update user"
- *               error: "Erro detalhado"
- */
-router.put('/:userId', userController.updateUser);
+router.put('/:userId', (req, res, next) => {
+  /* 
+    #swagger.tags = ['Usuário']
+    #swagger.description = 'Atualiza dados de um usuário (admin)'
+  */
+  return userController.updateUser(req, res, next);
+});
 
 // Delete/deactivate user
-/**
- * @swagger
- * /api/users/{userId}:
- *   delete:
- *     summary: Desativa (soft delete) um usuário (admin)
- *     tags:
- *       - Usuário
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID do usuário a ser desativado
- *     responses:
- *       200:
- *         description: Usuário desativado com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *             example:
- *               success: true
- *               message: "User deactivated successfully"
- *       404:
- *         description: Usuário não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *             example:
- *               success: false
- *               message: "User not found"
- *       500:
- *         description: Erro interno ao desativar usuário
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 error:
- *                   type: string
- *             example:
- *               success: false
- *               message: "Failed to delete user"
- *               error: "Erro detalhado"
- */
-router.delete('/:userId', userController.deleteUser);
+router.delete('/:userId', (req, res, next) => {
+  /* 
+    #swagger.tags = ['Usuário']
+    #swagger.description = 'Desativa (soft delete) um usuário (admin)'
+  */
+  return userController.deleteUser(req, res, next);
+});
 
 // Set user substitute
-/**
- * @swagger
- * /api/users/{userId}/substitute:
- *   post:
- *     summary: Define um substituto para o usuário (admin)
- *     tags:
- *       - Usuário
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID do usuário que receberá o substituto
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               substituteId:
- *                 type: string
- *               startDate:
- *                 type: string
- *               endDate:
- *                 type: string
- *               reason:
- *                 type: string
- *               workflows:
- *                 type: array
- *                 items:
- *                   type: string
- *     responses:
- *       200:
- *         description: Substituto atribuído com sucesso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     user:
- *                       type: string
- *                     startDate:
- *                       type: string
- *                     endDate:
- *                       type: string
- *                     reason:
- *                       type: string
- *                     active:
- *                       type: boolean
- *                     workflows:
- *                       type: array
- *                       items:
- *                         type: string
- *       400:
- *         description: ID do substituto não enviado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *             example:
- *               success: false
- *               message: "Substitute user ID is required"
- *       404:
- *         description: Usuário ou substituto não encontrado
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *             example:
- *               success: false
- *               message: "User not found"
- *       500:
- *         description: Erro interno ao definir substituto
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 error:
- *                   type: string
- *             example:
- *               success: false
- *               message: "Failed to set substitute"
- *               error: "Erro detalhado"
- */
-router.post('/:userId/substitute', userController.setUserSubstitute);
+router.post('/:userId/substitute', (req, res, next) => {
+  /* 
+    #swagger.tags = ['Usuário']
+    #swagger.description = 'Define um substituto para o usuário (admin)'
+  */
+  return userController.setUserSubstitute(req, res, next);
+});
 
 module.exports = router;
