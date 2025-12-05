@@ -475,9 +475,182 @@ router.use(authMiddleware.authorize(['Admin']));
 router.put('/:userId', userController.updateUser);
 
 // Delete/deactivate user
+/**
+ * @swagger
+ * /api/users/{userId}:
+ *   delete:
+ *     summary: Desativa (soft delete) um usuário (admin)
+ *     tags:
+ *       - Usuário
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID do usuário a ser desativado
+ *     responses:
+ *       200:
+ *         description: Usuário desativado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *             example:
+ *               success: true
+ *               message: "User deactivated successfully"
+ *       404:
+ *         description: Usuário não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "User not found"
+ *       500:
+ *         description: Erro interno ao desativar usuário
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "Failed to delete user"
+ *               error: "Erro detalhado"
+ */
 router.delete('/:userId', userController.deleteUser);
 
 // Set user substitute
+/**
+ * @swagger
+ * /api/users/{userId}/substitute:
+ *   post:
+ *     summary: Define um substituto para o usuário (admin)
+ *     tags:
+ *       - Usuário
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID do usuário que receberá o substituto
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               substituteId:
+ *                 type: string
+ *               startDate:
+ *                 type: string
+ *               endDate:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *               workflows:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Substituto atribuído com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: string
+ *                     startDate:
+ *                       type: string
+ *                     endDate:
+ *                       type: string
+ *                     reason:
+ *                       type: string
+ *                     active:
+ *                       type: boolean
+ *                     workflows:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       400:
+ *         description: ID do substituto não enviado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "Substitute user ID is required"
+ *       404:
+ *         description: Usuário ou substituto não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "User not found"
+ *       500:
+ *         description: Erro interno ao definir substituto
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "Failed to set substitute"
+ *               error: "Erro detalhado"
+ */
 router.post('/:userId/substitute', userController.setUserSubstitute);
 
 module.exports = router;
