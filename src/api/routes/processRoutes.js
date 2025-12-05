@@ -58,6 +58,121 @@ router.get('/:id', (req, res, next) => {
 	/*
 		#swagger.tags = ['Processo']
 		#swagger.description = 'Busca processo por ID'
+		#swagger.responses[200] = {
+			description: 'Processo encontrado com sucesso',
+			content: {
+				'application/json': {
+					example: {
+						success: true,
+						data: {
+							_id: '656e1f...',
+							workflow: {
+								_id: '656e1a...',
+								name: 'Aprovação de Documentos',
+								steps: [
+									{ name: 'Início', order: 1 },
+									{ name: 'Revisão', order: 2 },
+									{ name: 'Aprovação', order: 3 }
+								]
+							},
+							startedBy: {
+								_id: '656e1b...',
+								name: 'João Silva',
+								email: 'joao@email.com',
+								role: 'User'
+							},
+							assignedTo: [
+								{
+									_id: '656e1c...',
+									name: 'Maria Souza',
+									email: 'maria@email.com',
+									role: 'Manager'
+								}
+							],
+							status: 'active',
+							createdAt: '2025-12-05T10:00:00Z',
+							updatedAt: '2025-12-05T10:10:00Z',
+							history: [
+								{
+									action: 'start',
+									executedBy: { name: 'João Silva', email: 'joao@email.com' },
+									timestamp: '2025-12-05T10:00:00Z'
+								},
+								{
+									action: 'assign',
+									executedBy: { name: 'Maria Souza', email: 'maria@email.com' },
+									timestamp: '2025-12-05T10:05:00Z'
+								}
+							],
+							comments: [
+								{
+									text: 'Processo iniciado.',
+									createdBy: { name: 'João Silva', email: 'joao@email.com' },
+									createdAt: '2025-12-05T10:01:00Z'
+								},
+								{
+									text: 'Revisão pendente.',
+									createdBy: { name: 'Maria Souza', email: 'maria@email.com' },
+									createdAt: '2025-12-05T10:06:00Z'
+								}
+							],
+							fields: {
+								documentType: 'Contrato',
+								value: 15000,
+								approved: false
+							},
+							dueDate: '2025-12-20T23:59:59Z',
+							priority: 'high'
+						}
+					}
+				}
+			}
+		}
+		#swagger.responses[400] = {
+			description: 'ID inválido',
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Invalid process ID format'
+					}
+				}
+			}
+		}
+		#swagger.responses[404] = {
+			description: 'Processo não encontrado',
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Process instance not found'
+					}
+				}
+			}
+		}
+		#swagger.responses[403] = {
+			description: 'Sem permissão para visualizar o processo',
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'You do not have permission to view this process'
+					}
+				}
+			}
+		}
+		#swagger.responses[500] = {
+			description: 'Erro interno',
+			content: {
+				'application/json': {
+					example: {
+						success: false,
+						message: 'Failed to fetch process',
+						error: 'Mensagem detalhada do erro'
+					}
+				}
+			}
+		}
 	*/
 	return processController.getProcessById(req, res, next);
 });
