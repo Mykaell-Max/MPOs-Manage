@@ -4,6 +4,7 @@ const userController = require('../controller/userController');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // Public routes
+
 /**
  * @swagger
  * /api/users/register:
@@ -96,6 +97,7 @@ const authMiddleware = require('../middleware/authMiddleware');
  *               error: "Erro detalhado"
  */
 router.post('/register', userController.createUser);
+ 
 /**
  * @swagger
  * /api/users/login:
@@ -145,23 +147,8 @@ router.post('/register', userController.createUser);
  *                       type: string
  *                     position:
  *                       type: string
- *                     profileImage:
- *                       type: string
  *                     preferences:
  *                       type: object
- *             example:
- *               success: true
- *               message: "Logged in successfully"
- *               token: "<jwt_token>"
- *               user:
- *                 _id: "abc123"
- *                 name: "Admin"
- *                 email: "admin@example.com"
- *                 roles: ["Admin"]
- *                 department: "TI"
- *                 position: "Coordenador"
- *                 profileImage: "url"
- *                 preferences: {}
  *       403:
  *         description: Email ou senha inválidos, ou conta desativada
  *         content:
@@ -196,19 +183,295 @@ router.post('/register', userController.createUser);
  */
 router.post('/login', userController.loginUser);
 
-// Protected routes
+// Protected routes - require authentication
 router.use(authMiddleware.authenticate);
 
 // Get current user profile
+/**
+ * @swagger
+ * /api/users/profile:
+ *   get:
+ *     summary: Retorna o perfil do usuário autenticado
+ *     tags:
+ *       - Usuário
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Perfil do usuário retornado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     roles:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     department:
+ *                       type: string
+ *                     position:
+ *                       type: string
+ *                     isActive:
+ *                       type: boolean
+ *                     lastLogin:
+ *                       type: string
+ *                     profileImage:
+ *                       type: string
+ *                     preferences:
+ *                       type: object
+ *       404:
+ *         description: Usuário não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "User not found"
+ *       500:
+ *         description: Erro interno ao buscar perfil
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "Failed to fetch user profile"
+ *               error: "Erro detalhado"
+ */
 router.get('/profile', userController.getUserProfile);
 
 // Update user preferences
+/**
+ * @swagger
+ * /api/users/preferences:
+ *   put:
+ *     summary: Atualiza as preferências do usuário autenticado
+ *     tags:
+ *       - Usuário
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               preferences:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Preferências atualizadas com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Preferências não enviadas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "Preferences object is required"
+ *       404:
+ *         description: Usuário não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "User not found"
+ *       500:
+ *         description: Erro interno ao atualizar preferências
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "Failed to update preferences"
+ *               error: "Erro detalhado"
+ */
 router.put('/preferences', userController.updateUserPreferences);
 
 // Admin-only routes
 router.use(authMiddleware.authorize(['Admin']));
 
 // Update user
+/**
+ * @swagger
+ * /api/users/{userId}:
+ *   put:
+ *     summary: Atualiza dados de um usuário (admin)
+ *     tags:
+ *       - Usuário
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID do usuário a ser atualizado
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               department:
+ *                 type: string
+ *               position:
+ *                 type: string
+ *               isActive:
+ *                 type: boolean
+ *               lastLogin:
+ *                 type: string
+ *               profileImage:
+ *                 type: string
+ *               preferences:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Usuário atualizado com sucesso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     roles:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     department:
+ *                       type: string
+ *                     position:
+ *                       type: string
+ *                     isActive:
+ *                       type: boolean
+ *                     lastLogin:
+ *                       type: string
+ *                     profileImage:
+ *                       type: string
+ *                     preferences:
+ *                       type: object
+ *       400:
+ *         description: Atualização de roles não permitida
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "Role updates must be done through the role assignment endpoints"
+ *       404:
+ *         description: Usuário não encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "User not found"
+ *       500:
+ *         description: Erro interno ao atualizar usuário
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 error:
+ *                   type: string
+ *             example:
+ *               success: false
+ *               message: "Failed to update user"
+ *               error: "Erro detalhado"
+ */
 router.put('/:userId', userController.updateUser);
 
 // Delete/deactivate user
