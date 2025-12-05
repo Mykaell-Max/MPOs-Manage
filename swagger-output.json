@@ -1,15 +1,17 @@
 {
-  "swagger": "2.0",
+  "openapi": "3.0.0",
   "info": {
     "title": "MPOs API",
     "description": "Documentação da API MPOs",
     "version": "1.0.0"
   },
-  "host": "localhost:3000",
-  "basePath": "/",
-  "schemes": [
-    "http",
-    "https"
+  "servers": [
+    {
+      "url": "http://localhost:3000/"
+    },
+    {
+      "url": "https://localhost:3000/"
+    }
   ],
   "paths": {
     "/api/users/register": {
@@ -18,47 +20,105 @@
           "Autenticação"
         ],
         "description": "Registra um novo usuário (apenas admin)",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "example": "any"
-                },
-                "email": {
-                  "example": "any"
-                },
-                "password": {
-                  "example": "any"
-                },
-                "roles": {
-                  "example": "any"
-                },
-                "department": {
-                  "example": "any"
-                },
-                "position": {
-                  "example": "any"
-                },
-                "preferences": {
-                  "example": "any"
+        "responses": {
+          "201": {
+            "description": "Usuário criado com sucesso",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "User created successfully",
+                  "data": {
+                    "_id": "656e1f...",
+                    "name": "João Silva",
+                    "email": "joao@email.com",
+                    "roles": [
+                      "User"
+                    ],
+                    "department": "Financeiro",
+                    "position": "Analista",
+                    "preferences": {
+                      "theme": "dark"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Usuário já existe",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "User with this email already exists"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Failed to create user",
+                  "error": "Mensagem detalhada do erro"
                 }
               }
             }
           }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created"
-          },
-          "409": {
-            "description": "Conflict"
-          },
-          "500": {
-            "description": "Internal Server Error"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "João Silva"
+                  },
+                  "email": {
+                    "type": "string",
+                    "example": "joao@email.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "senha123"
+                  },
+                  "department": {
+                    "type": "string",
+                    "example": "Financeiro"
+                  },
+                  "position": {
+                    "type": "string",
+                    "example": "Analista"
+                  },
+                  "preferences": {
+                    "type": "object",
+                    "example": {
+                      "theme": "dark"
+                    }
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "User"
+                    ]
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ]
+              }
+            }
           }
         }
       }
@@ -69,32 +129,91 @@
           "Autenticação"
         ],
         "description": "Realiza login do usuário",
-        "parameters": [
-          {
-            "name": "body",
-            "in": "body",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "email": {
-                  "example": "any"
-                },
-                "password": {
-                  "example": "any"
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Logged in successfully",
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                  "user": {
+                    "_id": "656e1f...",
+                    "name": "João Silva",
+                    "email": "joao@email.com",
+                    "roles": [
+                      "User"
+                    ],
+                    "department": "Financeiro",
+                    "position": "Analista",
+                    "profileImage": "https://...",
+                    "preferences": {
+                      "theme": "dark"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Email ou senha inválidos, ou conta desativada",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "invalid": {
+                    "summary": "Credenciais inválidas",
+                    "value": {
+                      "success": false,
+                      "message": "Invalid email or password"
+                    }
+                  },
+                  "deactivated": {
+                    "summary": "Conta desativada",
+                    "value": {
+                      "success": false,
+                      "message": "Your account is deactivated. Please contact an administrator."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Login failed",
+                  "error": "Mensagem detalhada do erro"
                 }
               }
             }
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "500": {
-            "description": "Internal Server Error"
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "joao@email.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "example": "senha123"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
           }
         }
       }

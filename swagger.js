@@ -1,6 +1,7 @@
 const swaggerAutogen = require('swagger-autogen')();
 
 const doc = {
+  openapi: '3.0.0',
   info: {
     title: 'MPOs API',
     description: 'Documentação da API MPOs',
