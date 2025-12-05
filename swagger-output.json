@@ -12,16 +12,6 @@
     "https"
   ],
   "paths": {
-    "/ping": {
-      "get": {
-        "description": "",
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
     "/api/users/register": {
       "post": {
         "tags": [

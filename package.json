@@ -28,6 +28,7 @@
     "nodemailer": "^6.10.0",
     "swagger-autogen": "^2.23.7",
     "swagger-jsdoc": "^6.2.8",
+    "swagger-themes": "^1.4.3",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.0"
   },
